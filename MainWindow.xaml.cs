@@ -18,7 +18,6 @@ namespace ChatGPTApp
         private static readonly string geminiApiUrl = "https://gemini.abc15018045126.ip-ddns.com/v1/chat/completions"; // 正确的 API 端点，没有查询参数
         private static readonly string geminiApiKey = "AIzaSyDmGfx7r-MP8XglVrGkcG51JtTsqSH31uI"; // 替换为你的 Gemini API 密钥
         private static readonly string modelName = "gemini-2.0-flash"; // 替换为正确的模型名称
-        private static readonly int maxHistoryLength = 10; // 设置最大历史记录长度
 
         private IMongoCollection<BsonDocument> chatLogsCollection;
         private List<ChatMessage> chatHistory = new List<ChatMessage>(); // 创建对话历史记录列表
@@ -31,8 +30,6 @@ namespace ChatGPTApp
             var mongoClient = new MongoClient("mongodb://localhost:27017"); // 替换为正确的 MongoDB 连接字符串
             var database = mongoClient.GetDatabase("ChatGPTDB");
             chatLogsCollection = database.GetCollection<BsonDocument>("ChatLogs");
-
-            UpdateHistoryCount(); // 初始化历史记录计数器
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -63,13 +60,22 @@ namespace ChatGPTApp
         {
             try
             {
+                // 获取 HistoryCountTextBox 的值
+                int maxHistoryLength = GetMaxHistoryLength();
+
+                // 获取 EnableHistoryLimitTextBox 的值
+                bool enableHistoryLimit = GetEnableHistoryLimit();
+
                 // 更新对话历史记录
                 chatHistory.Add(new ChatMessage { role = "user", content = input });
 
                 // 限制对话历史记录的长度
-                if (chatHistory.Count > maxHistoryLength)
+                if (enableHistoryLimit)
                 {
-                    chatHistory.RemoveAt(0); // 移除最旧的对话条目
+                    while (chatHistory.Count > maxHistoryLength)
+                    {
+                        chatHistory.RemoveAt(0); // 移除最旧的对话条目
+                    }
                 }
 
                 // 构建请求体
@@ -116,8 +122,6 @@ namespace ChatGPTApp
                 // 更新对话历史记录
                 chatHistory.Add(new ChatMessage { role = "assistant", content = geminiResponse });
 
-                UpdateHistoryCount(); // 更新历史记录计数器
-
                 return geminiResponse;
             }
             catch (Exception ex)
@@ -139,10 +143,36 @@ namespace ChatGPTApp
             chatLogsCollection.InsertOne(chatLog);
         }
 
-        // 更新历史记录计数器
-        private void UpdateHistoryCount()
+        // 获取 HistoryCountTextBox 的值
+        private int GetMaxHistoryLength()
         {
-            HistoryCountTextBox.Text = chatHistory.Count.ToString();
+            if (int.TryParse(HistoryCountTextBox.Text, out int maxHistoryLength))
+            {
+                return maxHistoryLength;
+            }
+            else
+            {
+                // 如果 HistoryCountTextBox 的值无效，则返回默认值
+                MessageBox.Show("Invalid history count. Using default value of 10.");
+                HistoryCountTextBox.Text = "10"; // 重置为默认值
+                return 10;
+            }
+        }
+
+        // 获取 EnableHistoryLimitTextBox 的值
+        private bool GetEnableHistoryLimit()
+        {
+            if (int.TryParse(EnableHistoryLimitTextBox.Text, out int enableHistoryLimit))
+            {
+                return enableHistoryLimit == 0; // 0 表示启用限制，1 表示禁用限制
+            }
+            else
+            {
+                // 如果 EnableHistoryLimitTextBox 的值无效，则返回默认值
+                MessageBox.Show("Invalid enable history limit value. Using default value of 0.");
+                EnableHistoryLimitTextBox.Text = "0"; // 重置为默认值
+                return true; // 默认启用限制
+            }
         }
     }
 
