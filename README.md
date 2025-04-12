@@ -1,6 +1,10 @@
 # Gemini API Client
 
-Google's Gemini AI API.
+# Must be installed
+net 8.0
+https://dotnet.microsoft.com/en-us/download/dotnet/8.0
+MongoDB Community
+https://www.mongodb.com/try/download/compass
 
 ## Features
 
