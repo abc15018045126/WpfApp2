@@ -1,5 +1,6 @@
 # Gemini API Client
-![image](https://github.com/user-attachments/assets/3bc07686-2daf-4c34-af39-3f82c1a0fade)
+![image](https://github.com/user-attachments/assets/4eab0913-60e6-4679-a8a5-3981f6c82e19)
+
 
 # Must be installed
 ## net 8.0
